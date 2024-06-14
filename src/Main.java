@@ -40,13 +40,17 @@ public class Main {
             }
         }
 
+        /// ARCHIVOS NORMAL
         gestor1.mostrarLista();
-
         gestor1.guardarArchivos("D:\\Usuario\\Desktop\\Probando");
-
         System.out.println("LEER");
-
         gestor1.leerArchivos("D:\\Usuario\\Desktop\\Probando");
+
+        /// JSON
+        System.out.println("Escribiendo JSON: ");
+        gestor1.guardarArchivosJson("D:\\Usuario\\Desktop\\ProbandoJSON");
+        System.out.println("Lectura desde JSON: ");
+        gestor1.leerArchivosJson("D:\\Usuario\\Desktop\\ProbandoJSON");
 
 
 

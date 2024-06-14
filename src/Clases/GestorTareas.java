@@ -1,11 +1,12 @@
 package Clases;
 
 import Excepciones.ErrorGestorTareas;
-
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
 import java.io.*;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
+import java.lang.reflect.Type;
 import java.util.ArrayList;
 
 public class GestorTareas <T extends Tarea> implements Serializable {
@@ -62,23 +63,9 @@ public class GestorTareas <T extends Tarea> implements Serializable {
         return listaOrdenada;
     }
 
-    /// ARCHIVOS
+    //// ARCHIVOS
 
-    public void crearCarpeta(String rutaElegida)
-    {
-        Path ruta = Paths.get(rutaElegida);
-        try
-        {
-            if(!Files.exists(ruta))
-                Files.createDirectories(ruta);
-        }
-        catch (IOException e)
-        {
-            System.out.println("No se pudo crear la carpeta.");
-            System.out.println(e.getMessage());
-        }
-    }
-
+    /// metodo del power del campus
     public void guardarArchivos(String ruta)
     {
         ArrayList<ArrayList<? extends Tarea>> listaOrdenada = ordenarLista();
@@ -120,22 +107,76 @@ public class GestorTareas <T extends Tarea> implements Serializable {
         }
     }
 
-    public void manejeArchivos(String rutaElegida)
-    {
-        crearCarpeta(rutaElegida);
+    //// JSON
 
-    }
+    // ObjectMapper
+    // escribir con ObjectMapper
+    public void guardarTareasEnJson(String rutaArchivo) {
+        ObjectMapper objectMapper = new ObjectMapper();
 
-    private void guardarTareasEnArchivo(String rutaArchivo, ArrayList<? extends Tarea> tareas)
-    {
-        try (ObjectOutputStream objectOutputStream = new ObjectOutputStream (new FileOutputStream(rutaArchivo))) {
-            for (Tarea a : tareas) {
-                objectOutputStream.writeObject(a);
-            }
+        try {
+            File file = new File(rutaArchivo);
+            objectMapper.writeValue(file, listaTareas);
             System.out.println("Tareas guardadas en " + rutaArchivo);
-        } catch (Exception e) {
-            System.out.println("Error al guardar las tareas: " + e.getMessage());
+        } catch (IOException e) {
+            System.out.println("Error al guardar las tareas en JSON: " + e.getMessage());
             e.printStackTrace();
         }
     }
+
+    // leer con ObjectMapper
+    public void cargarTareasDesdeJson(String rutaArchivo) {
+        ObjectMapper objectMapper = new ObjectMapper();
+
+        try {
+            File file = new File(rutaArchivo);
+            listaTareas = objectMapper.readValue(file, new TypeReference<ArrayList<T>>() {});
+            System.out.println("Tareas cargadas desde " + rutaArchivo);
+        } catch (IOException e) {
+            System.out.println("Error al cargar las tareas desde JSON: " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
+
+    // escribir con Gson
+    public void guardarArchivosJson(String ruta) {
+        Gson gson = new Gson();
+        ArrayList<ArrayList<? extends Tarea>> listaOrdenada = ordenarLista();
+        for (ArrayList<? extends Tarea> a : listaOrdenada) {
+            if (!a.isEmpty()) {
+                Tarea tareaEjemplo = a.get(0);
+                String nombreArchivo = ruta + "/" + tareaEjemplo.getClass().getSimpleName() + ".json";
+                try (FileWriter writer = new FileWriter(nombreArchivo)) {
+                    gson.toJson(a, writer);
+                    System.out.println("Tareas guardadas en " + nombreArchivo);
+                } catch (IOException e) {
+                    System.out.println("Error al guardar las tareas: " + e.getMessage());
+                    e.printStackTrace();
+                }
+            }
+        }
+    }
+
+    // leer con Gson (creo que está mal)
+    public void leerArchivosJson(String ruta) {
+        Gson gson = new Gson();
+        ArrayList<ArrayList<? extends Tarea>> listaOrdenada = ordenarLista();
+        for (ArrayList<? extends Tarea> a : listaOrdenada) {
+            if (!a.isEmpty()) {
+                Tarea tareaEjemplo = a.get(0);
+                String nombreArchivo = ruta + "/" + tareaEjemplo.getClass().getSimpleName() + ".json";
+                try (FileReader reader = new FileReader(nombreArchivo)) {
+                    Type listType = new TypeToken<ArrayList<Tarea>>() {}.getType();
+                    ArrayList<Tarea> tareasLeidas = gson.fromJson(reader, listType);
+                    for (Tarea tarea : tareasLeidas) {
+                        System.out.println(tarea);
+                    }
+                } catch (IOException e) {
+                    System.out.println("Error al leer las tareas: " + e.getMessage());
+                    e.printStackTrace();
+                }
+            }
+        }
+    }
+
 }
